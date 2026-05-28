@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pokemon Kaufjournal</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+</head>
+<body>
+  <section id="login-screen" class="login-shell" hidden>
+    <form id="login-form" class="card login-card">
+      <h1>Pokemon Kaufjournal</h1>
+      <p class="login-intro">Bitte mit deinem freigeschalteten Account anmelden.</p>
+      <div class="field-group">
+        <label for="loginEmail">E-Mail</label>
+        <input id="loginEmail" name="loginEmail" type="email" autocomplete="email" required />
+      </div>
+      <div class="field-group">
+        <label for="loginPassword">Passwort</label>
+        <input id="loginPassword" name="loginPassword" type="password" autocomplete="current-password" required />
+      </div>
+      <button type="submit" class="btn btn-primary">Anmelden</button>
+      <p id="login-error" class="login-error" hidden></p>
+    </form>
+  </section>
+
+  <main class="app-shell" id="app-shell" hidden>
+    <div class="user-bar">
+      <span id="user-email"></span>
+      <button type="button" id="logout-btn" class="btn btn-secondary">Abmelden</button>
+    </div>
+    <header class="hero">
+      <div class="hero-text">
+        <h1>Pokemon Kaufjournal</h1>
+      </div>
+    </header>
+
+    <section class="card form-card">
+      <div class="section-header">
+        <h2>Kauf hinzufügen</h2>
+        <span class="badge">Neu</span>
+      </div>
+      <form id="purchase-form">
+        <div class="field-group">
+          <label for="category">Kategorie</label>
+          <select id="category" name="category" required>
+            <option value="Karten">Karten (Single Card)</option>
+            <option value="Booster Pack">Booster Pack</option>
+            <option value="Booster Display">Booster Display</option>
+            <option value="Elite Trainer Box">Elite Trainer Box</option>
+            <option value="Tin">Tin</option>
+            <option value="Mini Tin">Mini Tin</option>
+            <option value="Premium Collection">Premium Collection</option>
+            <option value="Theme Deck">Theme Deck</option>
+            <option value="Special Box">Special Box</option>
+            <option value="Sonstiges">Sonstiges</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label for="productName">Produktname</label>
+          <div class="product-search">
+            <input id="productName" name="productName" type="text" placeholder="z. B. Rayquaza" required autocomplete="off" />
+            <div id="product-results" class="product-results" hidden></div>
+          </div>
+          <input type="hidden" id="cardId" name="cardId" />
+          <input type="hidden" id="cardSet" name="cardSet" />
+          <input type="hidden" id="cardNumber" name="cardNumber" />
+          <input type="hidden" id="cardImage" name="cardImage" />
+          <input type="hidden" id="cardmarketUrl" name="cardmarketUrl" />
+          <p class="help-text">Tippe einen Kartennamen, um Pokemon-Karten aus dem offiziellen Katalog zu finden.</p>
+        </div>
+        <div class="field-row">
+          <div class="field-group">
+            <label for="purchasePrice">Kaufpreis (€)</label>
+            <input id="purchasePrice" name="purchasePrice" type="number" step="0.01" min="0" placeholder="49.99" required />
+          </div>
+          <div class="field-group">
+            <label for="purchaseDate">Kaufdatum</label>
+            <input id="purchaseDate" name="purchaseDate" type="date" required />
+          </div>
+        </div>
+        <div class="field-group">
+          <label for="receiptFile">Rechnung / Beleg</label>
+          <input id="receiptFile" name="receiptFile" type="file" accept="image/*,.pdf" />
+          <p class="help-text">Optional: Bild oder PDF hochladen, um den Kauf zu dokumentieren.</p>
+        </div>
+        <div class="field-group">
+          <label for="notes">Notizen</label>
+          <textarea id="notes" name="notes" rows="3" placeholder="Edition, Händler, Zustand, besondere Details..."></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="submit" id="submit-btn" class="btn btn-primary">Speichern</button>
+          <button type="button" id="cancel-edit-btn" class="btn btn-secondary" hidden>Abbrechen</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="section-header">
+        <h2>Deine Käufe</h2>
+      </div>
+      <div id="category-filter" class="category-filter"></div>
+      <div class="purchase-search">
+        <input id="purchase-search" type="search" placeholder="Käufe durchsuchen (Name, Set, Nummer, Notizen…)" autocomplete="off" />
+        <button type="button" id="purchase-search-clear" class="search-clear" aria-label="Suche zurücksetzen" hidden>×</button>
+      </div>
+      <div class="table-wrapper">
+        <table id="purchase-table">
+          <thead>
+            <tr>
+              <th>Produkt</th>
+              <th>Preis (€)</th>
+              <th>Datum</th>
+              <th>Rechnung</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="summary-row">
+        <div>
+          <strong id="purchase-count">0</strong> Käufe gespeichert
+        </div>
+        <div>
+          Gesamt: <strong id="total-spent">0,00 €</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="section-header">
+        <h2>Preischart</h2>
+      </div>
+      <div class="chart-toolbar">
+        <div class="chart-toolbar-row">
+          <div class="chart-mode">
+            <label for="chart-view">Ansicht</label>
+            <select id="chart-view">
+              <option value="per-card">Einzelpreise pro Karte</option>
+              <option value="total">Portfolio-Wert (gesamt)</option>
+              <option value="pnl">Gewinn/Verlust pro Karte</option>
+              <option value="value-change">Wertentwicklung über Zeit</option>
+            </select>
+          </div>
+          <div id="chart-timeframe" class="chart-timeframe"></div>
+        </div>
+        <div id="custom-range" class="custom-range" hidden>
+          <label>Von <input type="date" id="chart-from" /></label>
+          <label>Bis <input type="date" id="chart-to" /></label>
+        </div>
+      </div>
+      <div id="chart-controls" class="chart-controls"></div>
+      <div class="chart-card">
+        <canvas id="priceChart" height="220"></canvas>
+      </div>
+      <div id="chart-stats" class="chart-stats"></div>
+      <div class="performers-empty" id="performers-empty" hidden>
+        Noch keine Performance-Daten. Speichere Karten-Käufe und warte ein paar Tage auf Cardmarket-Updates.
+      </div>
+      <div class="performers-grid" id="performers-grid" hidden>
+        <div>
+          <h3 class="performers-title performers-title-up">Top-Performer</h3>
+          <ul id="top-performers" class="performers-list"></ul>
+        </div>
+        <div>
+          <h3 class="performers-title performers-title-down">Flop-Performer</h3>
+          <ul id="flop-performers" class="performers-list"></ul>
+        </div>
+      </div>
+      <div class="external-price-card">
+        <label for="externalPriceUrl">Externe Preishistorie laden</label>
+        <input id="externalPriceUrl" type="url" placeholder="https://example.com/preise.json" />
+        <button id="loadExternalPrices" class="btn btn-secondary">Laden</button>
+        <p class="help-text">Gib eine JSON-Quelle an, die ein Array aus Datum und Preis liefert. Beispielformat:<br /><code>[{"date":"2024-01-01","price":120.5}, ...]</code></p>
+      </div>
+    </section>
+  </main>
+
+  <template id="receipt-link-template">
+    <a href="#" target="_blank" class="receipt-link">Rechnung ansehen</a>
+  </template>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

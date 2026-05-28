@@ -1,0 +1,13 @@
+{
+  "name": "pokemon-kaufjournal",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pokemon Kaufjournal mit einfachem Node/Express Backend.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
